@@ -4,6 +4,8 @@ var fs     = require('fs'),
     path   = require('path'),
     hat    = require('hat');
 
+var jf = require('jsonfile');
+
 require('string.prototype.startswith');
 
 function Jasmine2ScreenShotReporter(opts) {
@@ -197,6 +199,63 @@ function Jasmine2ScreenShotReporter(opts) {
 
     this.jasmineDone = function() {
       var output = '<html><head><meta charset="utf-8"><style>body{font-family:Arial;}ul{list-style-position: inside;}.passed{padding: 0 1em;color:green;}.failed{padding: 0 1em;color:red;}.pending{padding: 0 1em;color:red;}</style></head><body>';
+
+        //old combined.js json example
+       /* var jsonObj = [
+            {
+                "description":"will login as Amanda|R&D Serial Amanda",
+                "passed":true,
+                "os":"Windows NT",
+                "browser":{
+                    "name":"chrome",
+                    "version":"41.0.2272.89"
+                },
+                "screenShotFile":"00cf0044-00bb-0067-0009-0018001c0086.png"
+            },
+            {
+                "description":"will expect that nodes are healthy|R&D Serial Amanda",
+                "passed":true,
+                "os":"Windows NT",
+                "browser":{
+                    "name":"chrome",
+                    "version":"41.0.2272.89"
+                },
+                "message":"Passed.",
+                "trace":"Error: Failed expectation\n    at [object Object].<anonymous> (C:\\j\\workspace\\systest-sbe-ui-regression\\al-html\\src\\main\\ng\\test\\e2e\\amanda.spec.js:47:54)\n    at [object Object].jasmine.Block.execute (C:\\Program Files (x86)\\nodejs\\node_modules\\protractor\\node_modules\\minijasminenode\\lib\\jasmine-1.3.1.js:1174:17)\n    at [object Object].jasmine.Queue.next_ (C:\\Program Files (x86)\\nodejs\\node_modules\\protractor\\node_modules\\minijasminenode\\lib\\jasmine-1.3.1.js:2209:31)\n    at [object Object]._onTimeout (C:\\Program Files (x86)\\nodejs\\node_modules\\protractor\\node_modules\\minijasminenode\\lib\\jasmine-1.3.1.js:2199:18)\n    at Timer.listOnTimeout [as ontimeout] (timers.js:112:15)",
+                "screenShotFile":"004c003e-0082-00fa-0050-00130031002c.png"
+            }];*/
+
+
+
+        /*-------------------------------------------------------------------------------------*/
+        //creates a json structure similar to protractor-html-screenshot-reporter (combined.json) output
+
+        var testResult = [];
+
+        var jsonFileName = _.trimRight(opts.filename, 'html') + 'json';
+        var filePathAndName = opts.dest + jsonFileName;
+
+
+        _.each(suites, function (suite) {
+            _.each(suite._specs, function (spec) {
+                var isPassed = (spec.status === "passed") ? true : false;
+                testResult.push({
+                    "description":spec.description,
+                    "passed":isPassed,
+                    "screenShotFile":spec.filename,
+                    "timeTookMiliSec":spec._finished - spec._started
+                });
+            });
+        });
+
+
+        jf.writeFile(filePathAndName, testResult, function(err) {
+            console.log(err);
+        });
+
+        /*-------------------------------------------------------------------------------------*/
+
+
 
       _.each(suites, function(suite) {
         output += printResults(suite);
